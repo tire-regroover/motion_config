@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+sendmail='msmtp -C /var/lib/motion/.msmtprc -t my@email.com'
+
+action=$1
+file=$2
+
+# on_event_start
+# on_event_end
+# on_picture_save
+# on_motion_detected
+# on_area_detected
+# on_movie_start
+# on_movie_end
+# on_camera_lost
+# on_camera_found
+
+case $action in
+    "on_picture_save")
+        if [ -f /var/lib/motion/.email ]; then
+            echo -e "Subject: Motion - ${action}\n\n${@}" \
+                | uuenview -a -bo $file \
+                | $sendmail
+        fi
+        ;;
+    "on_motion_detected")
+#        nc 192.168.0.19 80 <<< "talk" &
+        ;;
+    "on_movie_start")
+        ofile="${file}-000.jpg"
+        sleep 3
+        ffmpeg -i "${file}" -vframes 1 "${ofile}"
+        if [ -f /var/lib/motion/.email ]; then
+            echo -e "Subject: Motion - ${action}\n\n${@}" \
+                | uuenview -a -bo $ofile \
+                | $sendmail
+        fi
+        ;;
+esac
+
